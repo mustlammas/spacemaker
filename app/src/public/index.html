@@ -6,113 +6,13 @@
     <!-- The line below is only needed for old environments like Internet Explorer and Android 4.x -->
     <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=requestAnimationFrame,Element.prototype.classList,URL"></script>
     <script src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
-    <script src="https://cdn.rawgit.com/bjornharrtell/jsts/gh-pages/1.6.0/jsts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@turf/turf@5/turf.min.js"></script>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
     <script src="map.js"></script>
 </head>
 <body>
 <div id="map" class="map" tabindex="0"></div>
 <script>
-
-    var geoJson = {
-      "type": "FeatureCollection",
-      "features": [
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-              [
-                [
-                  -0.14007568359375,
-                  51.5027589576403
-                ],
-                [
-                  -0.12325286865234374,
-                  51.5027589576403
-                ],
-                [
-                  -0.12325286865234374,
-                  51.512588580360244
-                ],
-                [
-                  -0.14007568359375,
-                  51.512588580360244
-                ],
-                [
-                  -0.14007568359375,
-                  51.5027589576403
-                ]
-              ]
-            ]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-              [
-                [
-                  -0.1352691650390625,
-                  51.50810140697543
-                ],
-                [
-                  -0.11398315429687499,
-                  51.50810140697543
-                ],
-                [
-                  -0.11398315429687499,
-                  51.51963895991333
-                ],
-                [
-                  -0.1352691650390625,
-                  51.51963895991333
-                ],
-                [
-                  -0.1352691650390625,
-                  51.50810140697543
-                ]
-              ]
-            ]
-          }
-        },
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-              [
-                [
-                  -0.13595581054687497,
-                  51.49698840879303
-                ],
-                [
-                  -0.11226654052734375,
-                  51.49698840879303
-                ],
-                [
-                  -0.11226654052734375,
-                  51.50510971251776
-                ],
-                [
-                  -0.13595581054687497,
-                  51.50510971251776
-                ],
-                [
-                  -0.13595581054687497,
-                  51.49698840879303
-                ]
-              ]
-            ]
-          }
-        }
-      ]
-    };
-
 
     function getUnion(polygonA, polygonB) {
         return turf.union(polygonA, polygonB);
@@ -122,41 +22,44 @@
         return turf.intersect(polygonA, polygonB);
     }
 
-    var feature = getIntersection(geoJson.features[0], geoJson.features[1]);
+    jQuery.getJSON("features.json", null, function(geoJson) {
+        var feature = getIntersection(geoJson.features[0], geoJson.features[1]);
 
-    var WGS84 = 'EPSG:4326';
-    var WEB_MERCATOR = 'EPSG:3857';
+        var WGS84 = 'EPSG:4326';
+        var WEB_MERCATOR = 'EPSG:3857';
 
-    var map = mapModule.createMap();
+        var map = mapModule.createMap();
 
-    var style = new ol.style.Style({
-        fill: new ol.style.Fill({
-            color: 'rgba(255, 255, 255, 0.3)'
-        }),
-        stroke: new ol.style.Stroke({
-            color: '#319FD3',
-            width: 2
-        })
+        var style = new ol.style.Style({
+            fill: new ol.style.Fill({
+                color: 'rgba(255, 255, 255, 0.3)'
+            }),
+            stroke: new ol.style.Stroke({
+                color: '#319FD3',
+                width: 2
+            })
+        });
+
+        var features = (new ol.format.GeoJSON()).readFeatures(feature);
+
+        for (var i in features) {
+            var f = features[i];
+            f.getGeometry().transform(WGS84, WEB_MERCATOR);
+        }
+
+        var vectorSource = new ol.source.Vector({
+            features: features
+        });
+
+        var vectorLayer = new ol.layer.Vector({
+            title: 'Polygon layer',
+            source: vectorSource,
+            style: style
+        });
+
+        map.addLayer(vectorLayer);
     });
 
-    var features = (new ol.format.GeoJSON()).readFeatures(feature);
-
-    for (var i in features) {
-        var f = features[i];
-        f.getGeometry().transform(WGS84, WEB_MERCATOR);
-    }
-
-    var vectorSource = new ol.source.Vector({
-        features: features
-    });
-
-    var vectorLayer = new ol.layer.Vector({
-        title: 'Polygon layer',
-        source: vectorSource,
-        style: style
-    });
-
-    map.addLayer(vectorLayer);
 
 </script>
 </body>
