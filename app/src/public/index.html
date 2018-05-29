@@ -14,6 +14,16 @@
 <div id="map" class="map" tabindex="0"></div>
 <script>
 
+    var style = new ol.style.Style({
+        fill: new ol.style.Fill({
+            color: 'rgba(255, 255, 255, 0.3)'
+        }),
+        stroke: new ol.style.Stroke({
+            color: '#319FD3',
+            width: 2
+        })
+    });
+
     function getUnion(polygonA, polygonB) {
         return turf.union(polygonA, polygonB);
     }
@@ -22,42 +32,23 @@
         return turf.intersect(polygonA, polygonB);
     }
 
+    var map = mapModule.createMap();
+    map.addInteraction(new ol.interaction.Select());
+
+    var vectorSource = new ol.source.Vector();
+    var vectorLayer = new ol.layer.Vector({
+        title: 'Polygon layer',
+        source: vectorSource,
+        style: style
+    });
+
+    map.addLayer(vectorLayer);
+
     jQuery.getJSON("features.json", null, function(geoJson) {
-        var feature = getIntersection(geoJson.features[0], geoJson.features[1]);
-
-        var WGS84 = 'EPSG:4326';
-        var WEB_MERCATOR = 'EPSG:3857';
-
-        var map = mapModule.createMap();
-
-        var style = new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: 'rgba(255, 255, 255, 0.3)'
-            }),
-            stroke: new ol.style.Stroke({
-                color: '#319FD3',
-                width: 2
-            })
-        });
-
-        var features = (new ol.format.GeoJSON()).readFeatures(feature);
-
-        for (var i in features) {
-            var f = features[i];
-            f.getGeometry().transform(WGS84, WEB_MERCATOR);
-        }
-
-        var vectorSource = new ol.source.Vector({
-            features: features
-        });
-
-        var vectorLayer = new ol.layer.Vector({
-            title: 'Polygon layer',
-            source: vectorSource,
-            style: style
-        });
-
-        map.addLayer(vectorLayer);
+        var features = (new ol.format.GeoJSON({
+            featureProjection: mapModule.WEB_MERCATOR
+        })).readFeatures(geoJson);
+        vectorSource.addFeatures(features);
     });
 
 

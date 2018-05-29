@@ -1,4 +1,5 @@
 var mapModule = function() {
+    "use strict"
 
     var WEB_MERCATOR = 'EPSG:3857';
     var WGS84 = 'EPSG:4326';
@@ -34,6 +35,8 @@ var mapModule = function() {
 
     return {
         createMap: createMap,
-        union: union
+        union: union,
+        WGS84: WGS84,
+        WEB_MERCATOR: WEB_MERCATOR
     }
 }();
