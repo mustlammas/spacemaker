@@ -1,6 +1,7 @@
 var jQuery = require("jquery");
 var React = require('react');
 var turf = require('turf');
+const uuidv4 = require('uuid/v4');
 
 var ol_Map = require('ol/map').default;
 var ol_layer_Tile = require('ol/layer/tile').default;
@@ -19,7 +20,8 @@ var API_URL = 'api/v1/features';
 function asGeoJson(features) {
   var geoJsonFeatures = new ol_format_GeoJSON().writeFeatures(features, {
     featureProjection: WEB_MERCATOR,
-    dataProjection: WGS84
+    dataProjection: WGS84,
+    rightHanded: true
   });
   return JSON.parse(geoJsonFeatures);
 }
@@ -116,6 +118,18 @@ function updateMap(map, features, newFeature) {
   addFeatures(map, feature);
 }
 
+function updateRepository(features, newFeature) {
+  var url = API_URL + "/" + uuidv4();
+  var success = function(data) {
+    console.log("Feature saved successfully.");
+  };
+  console.info("Posting feature: " + url);
+  var data = {
+    json: JSON.stringify(newFeature)
+  };
+  jQuery.post(url, data, success, 'json');
+}
+
 var map;
 var selectInteraction;
 
@@ -129,7 +143,6 @@ class Map extends React.Component {
       var features = (new ol_format_GeoJSON({
         featureProjection: WEB_MERCATOR
       })).readFeatures(geoJson);
-      console.log(features);
       addFeatures(map, features);
     });
   }
@@ -138,6 +151,7 @@ class Map extends React.Component {
     var features = getSelectedFeatures();
     if (features.length > 1) {
       var union = getUnion(features);
+      updateRepository(features, union);
       updateMap(map, features, union);
     }
   }
@@ -146,6 +160,7 @@ class Map extends React.Component {
     var features = getSelectedFeatures();
     if (features.length > 1) {
       var intersection = getIntersection(features);
+      updateRepository(features, intersection);
       updateMap(map, features, intersection);
     }
   }
