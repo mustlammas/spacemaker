@@ -13,9 +13,10 @@ var ol_Proj = require('ol/proj').default;
 var ol_format_GeoJSON = require('ol/format/GeoJSON').default;
 var ol_interaction_Select = require('ol/interaction/Select').default;
 
-var WEB_MERCATOR = 'EPSG:3857';
-var WGS84 = 'EPSG:4326';
-var API_URL = 'api/v1/features';
+const WEB_MERCATOR = 'EPSG:3857';
+const WGS84 = 'EPSG:4326';
+const API_URL = 'api/v1/features';
+const LAYER_ID = "vector-layer";
 
 function asGeoJson(features) {
   var geoJsonFeatures = new ol_format_GeoJSON().writeFeatures(features, {
@@ -26,7 +27,7 @@ function asGeoJson(features) {
   return JSON.parse(geoJsonFeatures);
 }
 
-function getUnion(features) {
+function createUnionFeature(features) {
   var geoJsonObject = asGeoJson(features);
   var union;
   for (var i in geoJsonObject.features) {
@@ -36,7 +37,7 @@ function getUnion(features) {
   return union;
 }
 
-function getIntersection(features) {
+function createIntersectionFeature(features) {
   var geoJsonObject = asGeoJson(features);
   if (geoJsonObject.features.length == 2) {
     return turf.intersect(geoJsonObject.features[0], geoJsonObject.features[1]);
@@ -44,8 +45,6 @@ function getIntersection(features) {
     throw "Can't intersect more than two polygons";
   }
 }
-
-let LAYER_ID = "vector-layer";
 
 function createMap(center) {
   var vectorSource = new ol_source_Vector();
@@ -144,8 +143,7 @@ function deleteFeature(feature) {
 function updateRepository(features, newFeature) {
   postFeature(newFeature);
   for (var i in features) {
-    var feature = features[i];
-    deleteFeature(feature);
+    deleteFeature(features[i]);
   }
 }
 
@@ -169,7 +167,7 @@ class Map extends React.Component {
   union() {
     var features = getSelectedFeatures();
     if (features.length > 1) {
-      var union = getUnion(features);
+      var union = createUnionFeature(features);
       updateRepository(features, union);
       updateMap(map, features, union);
     }
@@ -178,7 +176,7 @@ class Map extends React.Component {
   intersect() {
     var features = getSelectedFeatures();
     if (features.length > 1) {
-      var intersection = getIntersection(features);
+      var intersection = createIntersectionFeature(features);
       updateRepository(features, intersection);
       updateMap(map, features, intersection);
     }
