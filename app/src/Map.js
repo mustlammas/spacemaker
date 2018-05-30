@@ -14,15 +14,17 @@ var ol_interaction_Select = require('ol/interaction/Select').default;
 
 var WEB_MERCATOR = 'EPSG:3857';
 var WGS84 = 'EPSG:4326';
-var center = [-0.13, 51.51];
 
-function getUnion(features) {
+function asGeoJson(features) {
   var geoJsonFeatures = new ol_format_GeoJSON().writeFeatures(features, {
     featureProjection: WEB_MERCATOR,
     dataProjection: WGS84
   });
-  var geoJsonObject = JSON.parse(geoJsonFeatures);
+  return JSON.parse(geoJsonFeatures);
+}
 
+function getUnion(features) {
+  var geoJsonObject = asGeoJson(features);
   var union;
   for (var i in geoJsonObject.features) {
     var feature = geoJsonObject.features[i];
@@ -31,66 +33,126 @@ function getUnion(features) {
   return union;
 }
 
-function getIntersection(polygonA, polygonB) {
-  return turf.intersect(polygonA, polygonB);
+function getIntersection(features) {
+  var geoJsonObject = asGeoJson(features);
+  if (geoJsonObject.features.length == 2) {
+    return turf.intersect(geoJsonObject.features[0], geoJsonObject.features[1]);
+  } else {
+    throw "Can't intersect more than two polygons";
+  }
 }
 
-var selectedFeatures;
+let LAYER_ID = "vector-layer";
+
+function createMap(center) {
+  var vectorSource = new ol_source_Vector();
+  var vectorLayer = new ol_layer_Vector({
+    title: 'Polygon layer',
+    source: vectorSource,
+    id: LAYER_ID
+  });
+
+  var map = new ol_Map({
+    target: 'map',
+    layers: [
+      new ol_layer_Tile({
+        source: new ol_source_OSM()
+      })
+    ],
+    view: new ol_View({
+      center: ol_Proj.transform(center, WGS84, WEB_MERCATOR),
+      zoom: 13
+    })
+  });
+
+  var selectInteraction = new ol_interaction_Select();
+  map.addInteraction(selectInteraction);
+  map.addLayer(vectorLayer);
+
+  return {
+    map: map,
+    selectInteraction: selectInteraction
+  }
+}
+
+function getVectorLayer(map) {
+  var layers = map.getLayers().getArray();
+  for (var i in layers) {
+    var layer = layers[i];
+    if (layer.get('id') === LAYER_ID) {
+      return layer;
+    }
+  }
+}
+
+function getSelectedFeatures() {
+  return selectInteraction.getFeatures().getArray();
+}
+
+function clearSelectedFeatures() {
+  return selectInteraction.getFeatures().clear();
+}
+
+function removeFeature(map, feature) {
+  getVectorLayer(map).getSource().removeFeature(feature);
+}
+
+function addFeatures(map, features) {
+  getVectorLayer(map).getSource().addFeatures(features);
+}
+
+function updateMap(map, features, newFeature) {
+  var feature = new ol_format_GeoJSON({
+    featureProjection: WEB_MERCATOR,
+    dataProjection: WGS84
+  }).readFeatures(newFeature);
+
+  for (var i in features) {
+    removeFeature(map, features[i]);
+  }
+
+  clearSelectedFeatures();
+  addFeatures(map, feature);
+}
+
 var map;
-var vectorSource;
+var selectInteraction;
 
 class Map extends React.Component {
   componentDidMount() {
-    vectorSource = new ol_source_Vector();
-    var vectorLayer = new ol_layer_Vector({
-      title: 'Polygon layer',
-      source: vectorSource
-    });
-
-    map = new ol_Map({
-      target: 'map',
-      layers: [
-        new ol_layer_Tile({
-          source: new ol_source_OSM()
-        })
-      ],
-      view: new ol_View({
-        center: ol_Proj.transform(center, WGS84, WEB_MERCATOR),
-        zoom: 13
-      })
-    });
-
-    var select = new ol_interaction_Select();
-    selectedFeatures = select.getFeatures();
-    map.addInteraction(select);
+    var createdMap = createMap([-0.13, 51.51]);
+    map = createdMap.map;
+    selectInteraction = createdMap.selectInteraction;
 
     jQuery.getJSON("features.json", null, function(geoJson) {
-      // TODO: load data from REST API
       var features = (new ol_format_GeoJSON({
         featureProjection: WEB_MERCATOR
       })).readFeatures(geoJson);
-      vectorSource.addFeatures(features);
+      addFeatures(map, features);
     });
-
-    map.addLayer(vectorLayer);
   }
 
-  union(e) {
-    var features = selectedFeatures.getArray();
+  union() {
+    var features = getSelectedFeatures();
     if (features.length > 1) {
       var union = getUnion(features);
-      var olFeatures = new ol_format_GeoJSON({
-        featureProjection: WEB_MERCATOR,
-        dataProjection: WGS84
-      }).readFeatures(union);
-      vectorSource.clear();
-      selectedFeatures.clear();
-      vectorSource.addFeatures(olFeatures);
+      updateMap(map, features, union);
+    }
+  }
+
+  intersect() {
+    var features = getSelectedFeatures();
+    if (features.length > 1) {
+      var intersection = getIntersection(features);
+      updateMap(map, features, intersection);
     }
   }
 
   render() {
-    return <button onClick={this.union}>Union</button>;
+    return <div>
+             <button onClick={this.union}>Union</button>
+             <button onClick={this.intersect}>Intersect</button>
+           </div>;
   }
 }
 
