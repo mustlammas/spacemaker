@@ -6,7 +6,7 @@ Couple of notes:
 - Persisting changes to the backend is done with individual REST API calls to POST and DELETE features. This would have to be done in one transaction because if one of those calls fails we have a corrupt state in the database.
 - Node.js is something I haven't used before but I thought I'd try it out just to get some experience with it.
 - React, OpenLayers and Open Street Map data is something that I've used before.
-
+- Tests: I would normally create UI tests (Jasmine or some other framework), unit tests for server side code and tests for the REST API (I usually use the rest-assured library for that).
 # Prerequisites
 - Install node.js
 
