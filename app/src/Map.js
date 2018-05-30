@@ -14,6 +14,7 @@ var ol_interaction_Select = require('ol/interaction/Select').default;
 
 var WEB_MERCATOR = 'EPSG:3857';
 var WGS84 = 'EPSG:4326';
+var API_URL = 'api/v1/features';
 
 function asGeoJson(features) {
   var geoJsonFeatures = new ol_format_GeoJSON().writeFeatures(features, {
@@ -124,10 +125,11 @@ class Map extends React.Component {
     map = createdMap.map;
     selectInteraction = createdMap.selectInteraction;
 
-    jQuery.getJSON("features.json", null, function(geoJson) {
+    jQuery.getJSON(API_URL, null, function(geoJson) {
       var features = (new ol_format_GeoJSON({
         featureProjection: WEB_MERCATOR
       })).readFeatures(geoJson);
+      console.log(features);
       addFeatures(map, features);
     });
   }
