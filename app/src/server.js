@@ -1,10 +1,16 @@
 var express = require('express');
 var connect = require('connect');
 var serveStatic = require('serve-static');
-var app = require('./app');
+const sqlite3 = require('sqlite3').verbose();
+var fs = require('fs');
+var express = require('express');
+var FeatureController = require('./FeatureController');
 
-var port = 3000;
+const PORT = 3000;
+
+var app = express();
+app.use('/api/v1/features', FeatureController);
 app.use(express.static('./src/public'));
-var server = app.listen(port, function() {
-  console.log('Express server listening on port ' + port);
+var server = app.listen(PORT, function() {
+  console.log('Server listening on port ' + PORT);
 });

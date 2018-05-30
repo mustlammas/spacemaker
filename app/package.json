@@ -14,6 +14,8 @@
     "react": "^16.4.0",
     "react-dom": "^16.4.0",
     "serve-static": "^1.13.2",
+    "sqlite-sync": "^0.3.8",
+    "sqlite3": "^4.0.0",
     "turf": "^3.0.14",
     "uuid": "^3.2.1"
   },

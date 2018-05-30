@@ -7,7 +7,8 @@ router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
 router.get('/', function (req, res) {
-  res.status(200).send(FeatureRepository.getAll());
+  var features = FeatureRepository.getAll();
+  res.status(200).send(JSON.stringify(features));
 });
 
 router.post('/:uuid', function (req, res) {

@@ -103,26 +103,28 @@ function addFeatures(map, features) {
   getVectorLayer(map).getSource().addFeatures(features);
 }
 
-function updateMap(map, features, newFeature) {
-  var feature = new ol_format_GeoJSON({
-    featureProjection: WEB_MERCATOR,
-    dataProjection: WGS84
-  }).readFeatures(newFeature);
-
-  for (var i in features) {
-    removeFeature(map, features[i]);
-  }
-
+function clearMap(map) {
+  getVectorLayer(map).getSource().clear();
   clearSelectedFeatures();
-  addFeatures(map, feature);
+}
+
+function updateMap(map) {
+  jQuery.getJSON(API_URL, null, function(geoJson) {
+    var features = (new ol_format_GeoJSON({
+      featureProjection: WEB_MERCATOR
+    })).readFeatures(geoJson);
+    clearMap(map);
+    addFeatures(map, features);
+  });
 }
 
 function postFeature(feature) {
-  var url = API_URL + '/' + uuidv4();
+  var uuid = uuidv4();
+  feature.properties.id = uuid;
+  var url = API_URL + '/' + uuid;
   var success = function(data) {
     console.log("Feature saved successfully.");
   };
-  console.info("Posting feature: " + url);
   var data = {
     json: JSON.stringify(feature)
   };
@@ -169,7 +171,7 @@ class Map extends React.Component {
     if (features.length > 1) {
       var union = createUnionFeature(features);
       updateRepository(features, union);
-      updateMap(map, features, union);
+      updateMap(map);
     }
   }
 
@@ -178,7 +180,7 @@ class Map extends React.Component {
     if (features.length > 1) {
       var intersection = createIntersectionFeature(features);
       updateRepository(features, intersection);
-      updateMap(map, features, intersection);
+      updateMap(map);
     }
   }
 
