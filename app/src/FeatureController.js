@@ -13,8 +13,18 @@ router.get('/', function (req, res) {
 router.post('/:uuid', function (req, res) {
   var uuid = req.params.uuid;
   var json = req.body.json;
-  FeatureRepository.add(uuid, json);
-  res.status(201).send(uuid);
+  var statusCode = FeatureRepository.add(uuid, json);
+  if (statusCode === 201) {
+    res.status(statusCode).send(uuid);
+  } else {
+    res.status(statusCode);
+  }
+});
+
+router.delete('/:uuid', function (req, res) {
+  var uuid = req.params.uuid;
+  FeatureRepository.delete(uuid);
+  res.status(200).send(uuid);
 });
 
 module.exports = router;

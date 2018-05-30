@@ -1,7 +1,8 @@
 var GJV = require("geojson-validation");
 
 var repository = {
-  features: [{
+  features: {
+    "cf2022a4-8002-4e5d-b940-22029308d8ab": {
       "type": "Feature",
       "properties": {
         "id": "cf2022a4-8002-4e5d-b940-22029308d8ab"
@@ -29,7 +30,7 @@ var repository = {
         ]
       }
     },
-    {
+    "9c9e68cd-89bc-43ef-9788-fc7fbef048d8": {
       "type": "Feature",
       "properties": {
         "id": "9c9e68cd-89bc-43ef-9788-fc7fbef048d8"
@@ -57,7 +58,7 @@ var repository = {
         ]
       }
     },
-    {
+    "1ac3822d-5dd7-4090-92f9-decb34bb1ed1": {
       "type": "Feature",
       "properties": {
         "id": "1ac3822d-5dd7-4090-92f9-decb34bb1ed1"
@@ -85,21 +86,31 @@ var repository = {
         ]
       }
     }
-  ],
+  },
   getAll: function() {
     return {
       "type": "FeatureCollection",
-      "features": this.features
+      "features": Object.values(this.features)
     }
   },
   add: function(uuid, feature) {
     var featureObject = JSON.parse(feature);
+    if (uuid in this.features) {
+      return 409;
+    }
+
     if (GJV.valid(featureObject)) {
       console.info("Adding feature: " + uuid);
-      this.features.push(featureObject);
+      this.features[uuid] = featureObject;
+      return 201;
     } else {
-      throw "Invalid feature: (" + uuid + "): '" + feature + "'";
+      console.error("Invalid feature: (" + uuid + "): '" + feature + "'");
+      return 400;
     }
+  },
+  delete: function(uuid) {
+    console.info("Deleting feature: " + uuid);
+    delete this.features[uuid];
   }
 }
 

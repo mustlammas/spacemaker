@@ -118,16 +118,35 @@ function updateMap(map, features, newFeature) {
   addFeatures(map, feature);
 }
 
-function updateRepository(features, newFeature) {
-  var url = API_URL + "/" + uuidv4();
+function postFeature(feature) {
+  var url = API_URL + '/' + uuidv4();
   var success = function(data) {
     console.log("Feature saved successfully.");
   };
   console.info("Posting feature: " + url);
   var data = {
-    json: JSON.stringify(newFeature)
+    json: JSON.stringify(feature)
   };
   jQuery.post(url, data, success, 'json');
+}
+
+function deleteFeature(feature) {
+  var uuid = feature.getProperties()["id"];
+  jQuery.ajax({
+    url: API_URL + '/' + uuid,
+    type: 'DELETE',
+    success: function(result) {
+      console.info("Feature deleted: " + uuid)
+    }
+  });
+}
+
+function updateRepository(features, newFeature) {
+  postFeature(newFeature);
+  for (var i in features) {
+    var feature = features[i];
+    deleteFeature(feature);
+  }
 }
 
 var map;
