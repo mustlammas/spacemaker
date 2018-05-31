@@ -23,5 +23,5 @@ browserify -t [ babelify --presets [ react ] ] src/client.js -o src/public/bundl
 cd app/
 cp -force ../features.db .
 node src/server.js
-Go to http://localhost:3000 (REST API URL is http://localhost:3000/api/v1/features)
+Go to http://localhost:3000/index.html (REST API URL is http://localhost:3000/api/v1/features)
 ```

@@ -10,8 +10,8 @@ var ol_source_Vector = require('ol/source/vector').default;
 var ol_layer_Vector = require('ol/layer/vector').default;
 var ol_View = require('ol/view').default;
 var ol_Proj = require('ol/proj').default;
-var ol_format_GeoJSON = require('ol/format/GeoJSON').default;
-var ol_interaction_Select = require('ol/interaction/Select').default;
+var ol_format_GeoJSON = require('ol/format/geojson').default;
+var ol_interaction_Select = require('ol/interaction/select').default;
 
 const WEB_MERCATOR = 'EPSG:3857';
 const WGS84 = 'EPSG:4326';
